@@ -2,35 +2,40 @@ package main
 
 import (
 	"encoding/xml"
+	"flag"
 	"fmt"
+	"log"
 	"os"
 	"time"
+
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
 var cfg OvercastConfig
 
 func main() {
+	var configfileLoc string
 	var err error
 	var x Opml
-	var targetDate = time.Now()
+	var targetDateInput string
+	var targetDate time.Time
 
-	err = cleanenv.ReadConfig("config.yml", &cfg)
+	flag.StringVar(&configfileLoc, "c", "config.yml", "Config File Location")
+	flag.StringVar(&targetDateInput, "d", time.Now().Format("2006-01-02"), "Date for which data will be fetched")
+
+	flag.Parse()
+
+	err = cleanenv.ReadConfig(configfileLoc, &cfg)
 	if err != nil {
 		panic(err)
 	}
 
-	err = cleanenv.ReadConfig("config.yml", &cfg)
+	targetDate, err = time.Parse("2006-01-02", targetDateInput)
 	if err != nil {
 		panic(err)
 	}
 
-	if len(os.Args) == 2 {
-		targetDate, err = time.Parse("2006-01-02", os.Args[1])
-		if err != nil {
-			panic(err)
-		}
-	}
+	log.Printf("config: %s\ndate:%s\n", configfileLoc, targetDate.Format("2006-01-02"))
 
 	fmt.Println("Fetching Overcast data")
 	err = xml.Unmarshal([]byte(GetOpml(cfg)), &x)
@@ -42,7 +47,7 @@ func main() {
 	results := processOpml(targetDate, x)
 	if results != nil {
 		fmt.Printf("Adding content to %s\n", targetDate.Format("2006-01-02") )
-		// writeToFile(fmt.Sprintf("/Users/mckeehan/Sync/Obsidian/DailyAgenda/%s.md", targetDate.Format("2006-01-02")), results)
+		writeToFile(fmt.Sprintf("/Users/mckeehan/Sync/Obsidian/DailyAgenda/%s.md", targetDate.Format("2006-01-02")), results)
 		for _, e	:= range results {
 			fmt.Println(e)
 		}
@@ -63,7 +68,7 @@ func writeToFile(filename string, results []string) {
 	defer f.Close()
 
 	for _, e	:= range results {
-		if _, err = f.WriteString(e); err != nil {
+		if _, err = f.WriteString(e + "\n"); err != nil {
 			panic(err)
 		}
 	}
