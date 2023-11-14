@@ -4,7 +4,7 @@ import (
 	"encoding/xml"
 	"flag"
 	"fmt"
-	"log"
+	// "log"
 	"os"
 	"time"
 
@@ -35,7 +35,7 @@ func main() {
 		panic(err)
 	}
 
-	log.Printf("config: %s\ndate:%s\n", configfileLoc, targetDate.Format("2006-01-02"))
+	// log.Printf("config: %s\ndate:%s\n", configfileLoc, targetDate.Format("2006-01-02"))
 
 	fmt.Println("Fetching Overcast data")
 	err = xml.Unmarshal([]byte(GetOpml(cfg)), &x)
